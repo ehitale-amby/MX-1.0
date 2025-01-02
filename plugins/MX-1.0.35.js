@@ -1,42 +1,78 @@
-const { smd, bot_ } = require("../lib");
+const axios = require("axios");
+const astro_patch = require("../lib/plugins");
+const Config = require("../config");
 
-smd(
+astro_patch.cmd(
   {
-    cmdname: "reportbug",
-    alias: ["bugreport", "report"],
-    desc: "Report a bug to the developer",
-    fromMe: true,
-    type: "user",
-    use: "<bug description>",
+    pattern: "randompicture",
+    desc: "Fetches a random picture (dog, cat, car, etc.)",
+    category: "random",
     filename: __filename,
+    use: "<category>",
+    alias: ["randompic", "randomimage"],
   },
-  async (_0x5c3dd1, _0x543e4e) => {
+  async (message, query) => {
     try {
-      let bugDescription = _0x543e4e.trim();
-      if (!bugDescription) {
-        return await _0x5c3dd1.reply("*Please provide a description of the bug you encountered.*");
+      // Categories: dog, cat, car, naruto, animal, random, animpic
+      const categories = ["dog", "cat", "cars", "naruto", "animal", "random", "animpic"];
+      
+      if (!query || !categories.includes(query.toLowerCase())) {
+        return await message.reply(
+          `Please provide a valid category. Available categories are: ${categories.join(", ")}`
+        );
       }
 
-      // Get the user ID directly
-      const userId = _0x5c3dd1.user;
-      if (!userId) {
-        return await _0x5c3dd1.reply("*Unable to retrieve the user ID.*");
+      // Build the API URL
+      const apiUrl = `https://random-images-6flf.onrender.com/${query.toLowerCase()}`;
+      const response = await axios.get(apiUrl);
+
+      if (response && response.data && response.data.image) {
+        const imageUrl = response.data.image;
+
+        // Send the image to the user
+        await message.reply({
+          text: `Here is your random ${query} picture! 🖼️`,
+          image: { url: imageUrl },
+        });
+      } else {
+        return await message.reply(`Sorry, couldn't fetch a ${query} picture at the moment.`);
       }
-
-      // Prepare the bug report message
-      let reportMessage = `*Bug Report from User: ${userId}*\n\nDescription:\n${bugDescription}`;
-
-      // Send the report to your WhatsApp number
-      const developerNumber = "2349021506036"; // Replace with your WhatsApp number
-      await _0x5c3dd1.bot.sendMessage(developerNumber, {
-        text: reportMessage,
-      });
-
-      return await _0x5c3dd1.reply("*Bug report sent successfully! Thank you for your feedback.*");
-
     } catch (error) {
-      console.error("Error while sending bug report:", error);
-      await _0x5c3dd1.reply("*An error occurred while sending the bug report.*");
+      console.error("Error fetching random picture:", error);
+      await message.reply("An error occurred while fetching the picture.");
+    }
+  }
+);
+
+astro_patch.cmd(
+  {
+    pattern: "randomanimepic",
+    desc: "Fetches a random anime picture",
+    category: "random",
+    filename: __filename,
+    use: "",
+    alias: ["randomanime", "randomanimpic"],
+  },
+  async (message) => {
+    try {
+      // Fetch random anime picture
+      const apiUrl = "https://random-images-6flf.onrender.com/animpic";
+      const response = await axios.get(apiUrl);
+
+      if (response && response.data && response.data.image) {
+        const imageUrl = response.data.image;
+
+        // Send the image to the user
+        await message.reply({
+          text: "Here is your random anime picture! 🌸",
+          image: { url: imageUrl },
+        });
+      } else {
+        return await message.reply("Sorry, couldn't fetch an anime picture at the moment.");
+      }
+    } catch (error) {
+      console.error("Error fetching random anime picture:", error);
+      await message.reply("An error occurred while fetching the anime picture.");
     }
   }
 );
