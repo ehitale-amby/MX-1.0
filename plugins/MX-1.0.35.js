@@ -12,7 +12,7 @@ astro_patch.cmd(
   },
   async (message) => {
     try {
-      const apiUrl = "https://random-images-6flf.onrender.com/dog";
+      const apiUrl = "https://random-images-6flf.onrender.com/api/images/dog";
       const response = await axios.get(apiUrl);
 
       if (response && response.data && response.data.image) {
@@ -42,7 +42,7 @@ astro_patch.cmd(
   },
   async (message) => {
     try {
-      const apiUrl = "https://random-images-6flf.onrender.com/cat";
+      const apiUrl = "https://random-images-6flf.onrender.com/api/images/cat";
       const response = await axios.get(apiUrl);
 
       if (response && response.data && response.data.image) {
@@ -72,7 +72,7 @@ astro_patch.cmd(
   },
   async (message) => {
     try {
-      const apiUrl = "https://random-images-6flf.onrender.com/naruto";
+      const apiUrl = "https://random-images-6flf.onrender.com/api/images/naruto";
       const response = await axios.get(apiUrl);
 
       if (response && response.data && response.data.image) {
@@ -102,7 +102,7 @@ astro_patch.cmd(
   },
   async (message) => {
     try {
-      const apiUrl = "https://random-images-6flf.onrender.com/cars";
+      const apiUrl = "https://random-images-6flf.onrender.com/api/images/cars";
       const response = await axios.get(apiUrl);
 
       if (response && response.data && response.data.image) {
@@ -132,7 +132,7 @@ astro_patch.cmd(
   },
   async (message) => {
     try {
-      const apiUrl = "https://random-images-6flf.onrender.com/animal";
+      const apiUrl = "https://random-images-6flf.onrender.com/api/images/animal";
       const response = await axios.get(apiUrl);
 
       if (response && response.data && response.data.image) {
@@ -162,7 +162,7 @@ astro_patch.cmd(
   },
   async (message) => {
     try {
-      const apiUrl = "https://random-images-6flf.onrender.com/random";
+      const apiUrl = "https://random-images-6flf.onrender.com/api/images/random";
       const response = await axios.get(apiUrl);
 
       if (response && response.data && response.data.image) {
@@ -195,7 +195,7 @@ astro_patch.cmd(
   },
   async (message) => {
     try {
-      const apiUrl = "https://random-images-6flf.onrender.com/animepic";
+      const apiUrl = "https://random-images-6flf.onrender.com/api/images/animepic";
       const response = await axios.get(apiUrl);
 
       if (response && response.data && response.data.image) {
