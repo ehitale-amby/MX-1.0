@@ -34,7 +34,7 @@ const trend_usage = (() => {
 
 astro_patch.smd(
   {
-    cmdname: "mx",
+    cmdname: "mxgamecoder",
     desc: "Help list",
     react: "😈",
     desc: "To show all avaiable commands.",
@@ -52,13 +52,13 @@ astro_patch.smd(
         if (foundCommand) {
           commandDetails.push("*🔉Command:* " + foundCommand.pattern);
           if (foundCommand.category) {
-            commandDetails.push("*💁Category:* " + foundCommand.category);
+            commandDetails.push("*😔Category:* " + foundCommand.category);
           }
           if (foundCommand.alias && foundCommand.alias[0]) {
-            commandDetails.push("*💁Alias:* " + foundCommand.alias.join(", "));
+            commandDetails.push("*😔Alias:* " + foundCommand.alias.join(", "));
           }
           if (foundCommand.desc) {
-            commandDetails.push("*💁Description:* " + foundCommand.desc);
+            commandDetails.push("*😔Description:* " + foundCommand.desc);
           }
           if (foundCommand.use) {
             commandDetails.push(
@@ -149,12 +149,7 @@ astro_patch.smd(
   ${menuThemeCommandPrefix} *ᴅᴀᴛᴇ:* ${currentDate}
   ${menuThemeCommandPrefix} *ᴄᴏᴍᴍᴀɴᴅs:* ${commands.length}
   ${menuThemeCommandPrefix} *ᴜsᴀɢᴇ ᴛʀᴇɴᴅ:* ${trend_usage}
-  ${menuThemeCommandPrefix} *ᴅᴀᴛᴀʙᴀsᴇ:* ${database_info}
-  ${menuThemeFooter}\n
-│└────────────┈ ⳹
-│Thanks for Choosing MX-1.0 👍
-│ ©2025 MX-1.0 
-└─────────────────┈ ⳹
+  ${menuThemeFooter}\nMX-GΔMΞCØDΞR 
   \n${readmore}\n`;
 
       for (const category in categorizedCommands) {
@@ -181,7 +176,7 @@ astro_patch.smd(
       };
       return await message.sendUi(message.chat, messageOptions, message);
     } catch (error) {
-      await message.error(error + "\nCommand: menu", error);
+      await message.error(error + "\nCommand: mxgamecoder", error);
     }
   },
 );
