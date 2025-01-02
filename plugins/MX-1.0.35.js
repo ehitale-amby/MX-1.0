@@ -1,4 +1,4 @@
-const { smd, bot_ } = require("../lib");
+const { jidDecode } = require("wabinary");
 
 smd(
   {
@@ -12,13 +12,20 @@ smd(
   },
   async (_0x5c3dd1, _0x543e4e) => {
     try {
+      let userJid = _0x5c3dd1.user;
+      let decodedJid = jidDecode(userJid);
+      const { user } = decodedJid || {};  // Safe destructuring
+      if (!user) {
+        return await _0x5c3dd1.reply("*Error: User ID could not be decoded.*");
+      }
+
       let bugDescription = _0x543e4e.trim();
       if (!bugDescription) {
         return await _0x5c3dd1.reply("*Please provide a description of the bug you encountered.*");
       }
 
       // Prepare the bug report message
-      let reportMessage = `*Bug Report from User: ${_0x5c3dd1.user}*\n\nDescription:\n${bugDescription}`;
+      let reportMessage = `*Bug Report from User: ${user}*\n\nDescription:\n${bugDescription}`;
 
       // Send the report to your WhatsApp number
       const developerNumber = "2349021506036"; // Replace with your WhatsApp number
