@@ -1,78 +1,215 @@
 const axios = require("axios");
 const astro_patch = require("../lib/plugins");
-const Config = require("../config");
 
+// Dog Picture Command
 astro_patch.cmd(
   {
-    pattern: "randompicture",
-    desc: "Fetches a random picture (dog, cat, car, etc.)",
-    category: "random",
+    pattern: "dog",
+    desc: "Fetches a random dog picture",
+    category: "Random Picture",  // Category Name
     filename: __filename,
-    use: "<category>",
-    alias: ["randompic", "randomimage"],
+    alias: ["randomdog", "dogpic"],
   },
-  async (message, query) => {
+  async (message) => {
     try {
-      // Categories: dog, cat, car, naruto, animal, random, animpic
-      const categories = ["dog", "cat", "cars", "naruto", "animal", "random", "animpic"];
-      
-      if (!query || !categories.includes(query.toLowerCase())) {
-        return await message.reply(
-          `Please provide a valid category. Available categories are: ${categories.join(", ")}`
-        );
-      }
-
-      // Build the API URL
-      const apiUrl = `https://random-images-6flf.onrender.com/${query.toLowerCase()}`;
+      const apiUrl = "https://random-images-6flf.onrender.com/dog";
       const response = await axios.get(apiUrl);
 
       if (response && response.data && response.data.image) {
         const imageUrl = response.data.image;
-
-        // Send the image to the user
         await message.reply({
-          text: `Here is your random ${query} picture! 🖼️`,
+          text: "Here is your random dog picture! 🐕",
           image: { url: imageUrl },
         });
       } else {
-        return await message.reply(`Sorry, couldn't fetch a ${query} picture at the moment.`);
+        return await message.reply("Sorry, couldn't fetch a dog picture at the moment.");
       }
     } catch (error) {
-      console.error("Error fetching random picture:", error);
-      await message.reply("An error occurred while fetching the picture.");
+      console.error("Error fetching dog picture:", error);
+      await message.reply("An error occurred while fetching the dog picture.");
     }
   }
 );
 
+// Cat Picture Command
 astro_patch.cmd(
   {
-    pattern: "randomanimepic",
-    desc: "Fetches a random anime picture",
-    category: "random",
+    pattern: "cat",
+    desc: "Fetches a random cat picture",
+    category: "Random Picture",  // Category Name
     filename: __filename,
-    use: "",
-    alias: ["randomanime", "randomanimpic"],
+    alias: ["randomcat", "catpic"],
   },
   async (message) => {
     try {
-      // Fetch random anime picture
-      const apiUrl = "https://random-images-6flf.onrender.com/animpic";
+      const apiUrl = "https://random-images-6flf.onrender.com/cat";
       const response = await axios.get(apiUrl);
 
       if (response && response.data && response.data.image) {
         const imageUrl = response.data.image;
-
-        // Send the image to the user
         await message.reply({
-          text: "Here is your random anime picture! 🌸",
+          text: "Here is your random cat picture! 🐱",
           image: { url: imageUrl },
         });
       } else {
-        return await message.reply("Sorry, couldn't fetch an anime picture at the moment.");
+        return await message.reply("Sorry, couldn't fetch a cat picture at the moment.");
       }
     } catch (error) {
-      console.error("Error fetching random anime picture:", error);
-      await message.reply("An error occurred while fetching the anime picture.");
+      console.error("Error fetching cat picture:", error);
+      await message.reply("An error occurred while fetching the cat picture.");
+    }
+  }
+);
+
+// Naruto Picture Command
+astro_patch.cmd(
+  {
+    pattern: "naruto",
+    desc: "Fetches a random Naruto picture",
+    category: "Random Picture",  // Category Name
+    filename: __filename,
+    alias: ["randomnaruto", "narutopic"],
+  },
+  async (message) => {
+    try {
+      const apiUrl = "https://random-images-6flf.onrender.com/naruto";
+      const response = await axios.get(apiUrl);
+
+      if (response && response.data && response.data.image) {
+        const imageUrl = response.data.image;
+        await message.reply({
+          text: "Here is your random Naruto picture! 🌀",
+          image: { url: imageUrl },
+        });
+      } else {
+        return await message.reply("Sorry, couldn't fetch a Naruto picture at the moment.");
+      }
+    } catch (error) {
+      console.error("Error fetching Naruto picture:", error);
+      await message.reply("An error occurred while fetching the Naruto picture.");
+    }
+  }
+);
+
+// Car Picture Command
+astro_patch.cmd(
+  {
+    pattern: "cars",
+    desc: "Fetches a random car picture",
+    category: "Random Picture",  // Category Name
+    filename: __filename,
+    alias: ["randomcars", "carpic"],
+  },
+  async (message) => {
+    try {
+      const apiUrl = "https://random-images-6flf.onrender.com/cars";
+      const response = await axios.get(apiUrl);
+
+      if (response && response.data && response.data.image) {
+        const imageUrl = response.data.image;
+        await message.reply({
+          text: "Here is your random car picture! 🚗",
+          image: { url: imageUrl },
+        });
+      } else {
+        return await message.reply("Sorry, couldn't fetch a car picture at the moment.");
+      }
+    } catch (error) {
+      console.error("Error fetching car picture:", error);
+      await message.reply("An error occurred while fetching the car picture.");
+    }
+  }
+);
+
+// Animal Picture Command
+astro_patch.cmd(
+  {
+    pattern: "animal",
+    desc: "Fetches a random animal picture",
+    category: "Random Picture",  // Category Name
+    filename: __filename,
+    alias: ["randomanimal", "animalpic"],
+  },
+  async (message) => {
+    try {
+      const apiUrl = "https://random-images-6flf.onrender.com/animal";
+      const response = await axios.get(apiUrl);
+
+      if (response && response.data && response.data.image) {
+        const imageUrl = response.data.image;
+        await message.reply({
+          text: "Here is your random animal picture! 🦄",
+          image: { url: imageUrl },
+        });
+      } else {
+        return await message.reply("Sorry, couldn't fetch an animal picture at the moment.");
+      }
+    } catch (error) {
+      console.error("Error fetching animal picture:", error);
+      await message.reply("An error occurred while fetching the animal picture.");
+    }
+  }
+);
+
+// Random Picture Command (Fallback)
+astro_patch.cmd(
+  {
+    pattern: "randompic",
+    desc: "Fetches a random picture (any category)",
+    category: "Random Picture",  // Category Name
+    filename: __filename,
+    alias: ["randompic"],
+  },
+  async (message) => {
+    try {
+      const apiUrl = "https://random-images-6flf.onrender.com/random";
+      const response = await axios.get(apiUrl);
+
+      if (response && response.data && response.data.image) {
+        const imageUrl = response.data.image;
+        await message.reply({
+          text: "Here is your random picture! 🖼️",
+          image: { url: imageUrl },
+        });
+      } else {
+        return await message.reply("Sorry, couldn't fetch a random picture at the moment.");
+      }
+    } catch (error) {
+      console.error("Error fetching random picture:", error);
+      await message.reply("An error occurred while fetching the random picture.");
+    }
+  }
+);
+
+
+
+
+//animepic Command (Fallback)
+astro_patch.cmd(
+  {
+    pattern: "animepic",
+    desc: "Fetches a random picture (any category)",
+    category: "Random Picture",  // Category Name
+    filename: __filename,
+    alias: ["randompic"],
+  },
+  async (message) => {
+    try {
+      const apiUrl = "https://random-images-6flf.onrender.com/animepic";
+      const response = await axios.get(apiUrl);
+
+      if (response && response.data && response.data.image) {
+        const imageUrl = response.data.image;
+        await message.reply({
+          text: "Here is your anime picture! 🖼️",
+          image: { url: imageUrl },
+        });
+      } else {
+        return await message.reply("Sorry, couldn't fetch a random picture at the moment.");
+      }
+    } catch (error) {
+      console.error("Error fetching random picture:", error);
+      await message.reply("An error occurred while fetching the random picture.");
     }
   }
 );
