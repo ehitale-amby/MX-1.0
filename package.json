@@ -5,9 +5,9 @@
     "main": "index.js",
     "type": "commonjs",
     "scripts": {
-        "run": "pm2 start . --deep-monitoring --attach --name ,MX-1.0 || node .",
-        "start": "pm2 start . --attach --name ,MX-1.0",
-        "stop": "pm2 stop ,MX-1.0",
+        "run": "pm2 start . --deep-monitoring --attach --name MX-1.0 || node .",
+        "start": "pm2 start . --attach --name MX-1.0",
+        "stop": "pm2 stop MX-1.0",
         "build": "echo \"Building the project...\""
     },
     "author": "MX-GΔMΞCØDΞR",
