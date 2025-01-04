@@ -15,7 +15,7 @@ global.owner = process.env.OWNER_NUMBER
 global.THUMB_IMAGE =
   process.env.THUMB_IMAGE ||
   process.env.IMAGE ||
-  "https://i.ibb.co/ydmb74F/images.jpg,https://i.ibb.co/3M4XPRr/images.jpg; // do not touch it
+  "https://i.ibb.co/ydmb74F/images.jpg,https://i.ibb.co/3M4XPRr/images.jpg"; // do not touch it
 global.userImages =
   process.env.USER_IMAGES ||
   "https://i.ibb.co/zNCcyCx/images-3.jpg,https://i.ibb.co/85zBx67/images-1.jpg,https://i.ibb.co/MMpyjGt/images-2.jpg"; // do not touch it
