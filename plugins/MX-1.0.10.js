@@ -1,658 +1,538 @@
-const moment = require("moment-timezone");
-const {
-  fetchJson,
-  smd,
-  tlang,
-  send,
+let {
+  runtime,
+  formatp,
   prefix,
-  Config,
-  groupdb,
+  smd,
+  smdBuffer,
 } = require("../lib");
-let gis = require("async-g-i-s");
 const axios = require("axios");
 const fetch = require("node-fetch");
-const { shazam } = require("../lib");
-smd(
-  {
-    pattern: "find",
-    alias: ["shazam"],
-    category: "search",
-    desc: "Finds info about song",
-    filename: __filename,
-  },
-  async (message) => {
-    try {
-      let mime = message.reply_message ? message.reply_message.mtype : "";
-      if (!/audio/.test(mime))
-        return message.reply(`Reply audio ${prefix}find`);
-      let buff = await message.reply_message.download();
-      let data = await shazam(buff);
-      if (!data || !data.status) return message.send(data);
-      let h = `*TITLE: _${data.title}_* \n*ARTIST: _${data.artists}_*\n *ALBUM:* _${data.album}_ `;
-      await message.bot.sendUi(
-        message.jid,
-        { caption: h },
-        { quoted: message },
-        "text",
-        "true"
-      );
-    } catch (e) {
-      return await message.error(
-        `${e}\n\n command: find`,
-        e,
-        `*_Didn't get any results, Sorry!_*`
-      );
+const os = require("os");
+const speed = require("performance-now");
+const Config = require("../config");
+const cheerio = require("cheerio");
+smd({
+  cmdname: "messages",
+  alias: ["countmessage", "msgcount"],
+  desc: "Check how many users continuesly active in chat!",
+  category: "whatsapp",
+  filename: __filename
+}, async (_0x1cec94, _0x2535b1, {
+  store: _0x264360
+}) => {
+  try {
+    let _0x5af784 = {};
+    _0x264360.messages[_0x1cec94.jid].array.forEach(_0x2ec32f => {
+      const _0xd05e4b = _0x2ec32f.pushName || (_0x1cec94.isGroup ? _0x2ec32f.key.participant : _0x2ec32f.key.remoteJid || "unknown").split("@")[0];
+      _0x5af784[_0xd05e4b] = (_0x5af784[_0xd05e4b] || 0) + 1;
+    });
+    let _0x599777 = Object.entries(_0x5af784);
+    if (!_0x599777 || !_0x599777[0]) {
+      return await _0x1cec94.reply("_No messages found!_");
     }
-  }
-);
-smd(
-  {
-    pattern: "github",
-    category: "search",
-    desc: "Finds info about song",
-    filename: __filename,
-  },
-  async (message, match) => {
-    try {
-      message.react("🔍");
-      if (!match)
-        return message.reply(
-          `Give me a user name like ${prefix}github MX-1.0`
-        );
-
-      const { data } = await axios(`https://api.github.com/users/${match}`);
-      if (!data)
-        return await message.send(
-          `*_Didn't get any results, Provide valid user name!_*`
-        );
-      let gitdata = data;
-      message.sendMessage(
-        message.jid,
-        {
-          image: { url: gitdata.avatar_url },
-          caption: `ㅤㅤㅤ*[ GITHUB USER INFO ]*
-
-🚩 Id : ${gitdata.id}
-🔖 Nickname : ${gitdata.name}
-🔖 Username : ${gitdata.login}
-✨ Bio : ${gitdata.bio}
-🏢 Company : ${gitdata.company}
-📍 Location : ${gitdata.location}
-📧 Email : ${gitdata.email}
-📰 Blog : ${gitdata.blog}
-🔓 Public Repo : ${gitdata.repos_url}
-🔐 Public Gists : ${gitdata.gists_url}
-💕 Followers : ${gitdata.followers}
-👉 Following : ${gitdata.following}
-🔄 Updated At : ${gitdata.updated_at}
-🧩 Created At : ${gitdata.created_at}`,
-        },
-        { quoted: message }
-      );
-    } catch (e) {
-      return await message.error(
-        `${e}\n\n command: github`,
-        e,
-        `*_Didn't get any results, Sorry!_*`
-      );
-    }
-  }
-);
-smd(
-  {
-    pattern: "coffe",
-    alias: ["tea", "kofi"],
-    category: "search",
-    react: "🫡",
-    desc: "send randome coffe",
-    filename: __filename,
-  },
-  async (m) => {
-    try {
-      // m.react("🫡")
-      return await m.bot.sendMessage(
-        m.chat,
-        {
-          image: { url: "https://coffee.alexflipnote.dev/random" },
-          caption: `Here is your Coffee...`,
-        },
-        { quoted: m }
-      );
-    } catch (e) {
-      return await m.error(
-        `${e}\n\n command: coffe`,
-        e,
-        `*_Didn't get any results, Sorry!_*`
-      );
-    }
-  }
-);
-smd(
-  {
-    pattern: "lyrics",
-    alias: ["lyric"],
-    category: "search",
-    desc: "Searche lyrics of given song name",
-    use: "<text | song>",
-    filename: __filename,
-  },
-
-  async (message, text, { cmdName }) => {
-    if (!text)
-      return message.reply(
-        `*_Uhh please, give me song name_*\n*_Example ${
-          prefix + cmdName
-        } blue eyes punjabi_*`
-      );
-    try {
-      const res = await (
-        await fetch(`https://inrl-web.onrender.com/api/lyrics?text=${text}`)
-      ).json();
-      if (!res.status) return message.send("*Please Provide valid name!!!*");
-      if (!res.result)
-        return message.send("*There's a problem, try again later!*");
-      const { thumb, lyrics, title, artist } = res.result,
-        tbl = "```",
-        tcl = "*",
-        tdl = "_*",
-        contextInfo = {
-          externalAdReply: {
-            ...(await message.bot.contextInfo("MX-1.0", `Lyrics-${text}`)),
-          },
-        };
-      await send(
-        message,
-        `*𝚃𝚒𝚝𝚕𝚎:* ${title}\n*𝙰𝚛𝚝𝚒𝚜𝚝:* ${artist} \n${tbl}${lyrics}${tbl} `,
-        { contextInfo: contextInfo },
-        ""
-      );
-    } catch (e) {
-      return await message.error(
-        `${e}\n\n command: ${cmdName}`,
-        e,
-        `*_Didn't get any lyrics, Sorry!_*`
-      );
-    }
-  }
-);
-smd(
-  {
-    pattern: "imdb",
-    category: "search",
-    desc: "sends info of asked movie/series.",
-    use: "<text>",
-    filename: __filename,
-  },
-  async (message, match) => {
-    try {
-      if (!match)
-        return message.reply(`_Name a Series or movie ${tlang().greet}._`);
-      let { data } = await axios.get(
-        `http://www.omdbapi.com/?apikey=742b2d09&t=${match}&plot=full`
-      );
-      if (!data || data.cod == "404")
-        return await message.reply(`*_Please provide valid country name!_*`);
-
-      let imdbt =
-        "⚍⚎⚎⚎⚎⚎⚎⚎⚎⚎⚎⚎⚎⚎⚎⚍\n" + " ``` 𝕀𝕄𝔻𝔹 𝕊𝔼𝔸ℝℂℍ```\n" + "⚎⚎⚎⚎⚎⚎⚎⚎⚎⚎⚎⚎⚎⚎⚎⚎\n";
-      imdbt += "🎬Title      : " + data.Title + "\n";
-      imdbt += "📅Year       : " + data.Year + "\n";
-      imdbt += "⭐Rated      : " + data.Rated + "\n";
-      imdbt += "📆Released   : " + data.Released + "\n";
-      imdbt += "⏳Runtime    : " + data.Runtime + "\n";
-      imdbt += "🌀Genre      : " + data.Genre + "\n";
-      imdbt += "👨🏻‍💻Director   : " + data.Director + "\n";
-      imdbt += "✍Writer     : " + data.Writer + "\n";
-      imdbt += "👨Actors     : " + data.Actors + "\n";
-      imdbt += "📃Plot       : " + data.Plot + "\n";
-      imdbt += "🌐Language   : " + data.Language + "\n";
-      imdbt += "🌍Country    : " + data.Country + "\n";
-      imdbt += "🎖️Awards     : " + data.Awards + "\n";
-      imdbt += "📦BoxOffice  : " + data.BoxOffice + "\n";
-      imdbt += "🏙️Production : " + data.Production + "\n";
-      imdbt += "🌟imdbRating : " + data.imdbRating + "\n";
-      imdbt += "❎imdbVotes  : " + data.imdbVotes + "\n\n";
-      imdbt += Config.caption;
-      await message.bot.sendUi(
-        message.jid,
-        { caption: imdbt },
-        { quoted: message },
-        "image",
-        data.Poster
-      );
-    } catch (e) {
-      return await message.error(
-        `${e}\n\n command: ${cmdName}`,
-        e,
-        `*_Uhh dear, Didn't get any results!_*`
-      );
-    }
-  }
-);
-smd(
-  {
-    pattern: "weather",
-    category: "search",
-    desc: "Sends weather info about asked place.",
-    use: "<location>",
-    filename: __filename,
-  },
-  async (message, text) => {
-    try {
-      if (!text)
-        return message.reply(
-          `*_Give me city name, ${message.isCreator ? "Buddy" : "Idiot"}!!_*`
-        );
-      let { data } = await axios.get(
-        `https://api.openweathermap.org/data/2.5/weather?q=${text}&units=metric&appid=060a6bcfa19809c2cd4d97a212b19273&language=en`
-      );
-      if (!data || data.cod === "404")
-        return await message.reply(`*_Please provide valid city name!_*`);
-      let textw = `*🌟Weather of  ${text}*\n\n`;
-      textw += `*Weather:-* ${data.weather[0].main}\n`;
-      textw += `*Description:-* ${data.weather[0].description}\n`;
-      textw += `*Avg Temp:-* ${data.main.assets}\n`;
-      textw += `*Feels Like:-* ${data.main.feels_like}\n`;
-      textw += `*Pressure:-* ${data.main.pressure}\n`;
-      textw += `*Humidity:-* ${data.main.humidity}\n`;
-      textw += `*Humidity:-* ${data.wind.speed}\n`;
-      textw += `*Latitude:-* ${data.coord.lat}\n`;
-      textw += `*Longitude:-* ${data.coord.lon}\n`;
-      textw += `*Country:-* ${data.sys.country}\n\n`;
-      textw += Config.caption;
-      message.bot.sendUi(
-        message.jid,
-        { caption: textw },
-        { quoted: message },
-        "text",
-        "true"
-      );
-    } catch (e) {
-      return await message.error(
-        `${e}\n\n command: weather`,
-        e,
-        `*_Please provide valid city name!_*`
-      );
-    }
-  }
-);
-smd(
-  {
-    pattern: "npm",
-    desc: "download mp4 from url.",
-    category: "search",
-    use: "<package name>",
-    filename: __filename,
-  },
-  async (message, match) => {
-    try {
-      if (!match) return message.reply("Please give me package name.📦");
-      const { data } = await axios.get(
-        `https://api.npms.io/v2/search?q=${match}`
-      );
-      let txt = data.results
-        .map(
-          ({ package: pkg }) =>
-            `*${pkg.name}* (v${pkg.version})\n_${pkg.links.npm}_\n_${pkg.description}_`
-        )
-        .join("\n\n")
-        ?.trim();
-      data && txt
-        ? await message.reply(txt)
-        : await message.reply("*No Result Found. Sorry!!*");
-    } catch (e) {
-      await message.error(`${e}\n\ncommand : npm`, e);
-    }
-  }
-);
-smd(
-  {
-    pattern: "cric",
-    category: "search",
-    desc: "Sends info of given query from Google Search.",
-    use: "<text>",
-    filename: __filename,
-  },
-  async (message, text) => {
-    try {
-      await message.reply(`*_Please Wait, Getting Cricket Info_*`);
-      const response = await fetch(
-        "https://api.cricapi.com/v1/currentMatches?apikey=f68d1cb5-a9c9-47c5-8fcd-fbfe52bace78"
-      );
-      const dat = await response.json();
-
-      for (let i = 0; i < dat.data.length; i++) {
-        let j = i + 1;
-        text += `\n*--------------------- MATCH ${i}-------------------*`;
-        text += "\n*Match Name:* " + dat.data[i].name;
-        text += "\n*Match Status:* " + dat.data[i].status;
-        text += "\n*Match Date:* " + dat.data[i].dateTimeGMT;
-        text += "\n*Match Started:* " + dat.data[i].matchStarted;
-        text += "\n*Match Ended:* " + dat.data[i].matchEnded;
+    const _0x338160 = Object.entries(_0x5af784).map(([_0x4630e3, _0x3a7f93]) => "\t*" + (_0x4630e3?.split("\n").join(" ") || "unknown") + "*  ➪  _" + _0x3a7f93 + "_").join("\n");
+    var _0x370694 = ("*LIST OF ACTIVE USERS IN CURRENT CHAT*\n_Note: Sometimes Data will be reset when bot restart!_\n\n*Total Users: _" + _0x599777.length + "_*\n\n*USERNAME ➪ MESSAGE COUNT(s)*\n" + _0x338160 + "\n\n" + Config.caption).trim();
+    await _0x1cec94.send(_0x370694, {
+      contextInfo: {
+        ...(await _0x1cec94.bot.contextInfo("ACTIVE USERS", _0x1cec94.senderName))
       }
-      return await message.reply(text);
-    } catch (e) {
-      return await message.error(
-        `${e}\n\n command: cric`,
-        e,
-        `*_Uhh dear, Didn't get any results!_*`
-      );
-    }
+    }, "themx", _0x1cec94);
+  } catch (_0x225db9) {
+    console.log({
+      e: _0x225db9
+    });
   }
-);
-smd(
-  {
-    pattern: "google",
-    alias: ["search", "gsearch"],
-    category: "search",
-    desc: "Sends info of given query from Google Search.",
-    use: "<text>",
-    filename: __filename,
-  },
-  async (message, text) => {
-    try {
-      if (!text)
-        return message.reply(
-          `*_Uhh please, give me a query_*\n*_Example : ${prefix}google Suhail Md._*`
-        );
-      let google = require("google-it");
-      google({ query: text }).then((res) => {
-        let msg = `Google Search From : ${text} \n\n`;
-        for (let g of res) {
-          msg += `➣ Title : ${g.title}\n`;
-          msg += `➣ Description : ${g.snippet}\n`;
-          msg += `➣ Link : ${g.link}\n\n────────────────────────\n\n`;
-        }
-
-        return message.reply(msg);
+});
+let commandHistory = [];
+smd({
+  on: "main"
+}, async (_0x297aaa, _0x35b575, {
+  icmd: _0x5e5446
+}) => {
+  try {
+    if (_0x5e5446 && _0x297aaa.cmd) {
+      commandHistory.push({
+        user: _0x297aaa.sender,
+        command: _0x297aaa.cmd,
+        timestamp: new Date()
       });
-    } catch (e) {
-      return await message.error(
-        `${e}\n\n command: google`,
-        e,
-        `*_Uhh dear, Didn't get any results!_*`
-      );
     }
+  } catch (_0x4bf40a) {
+    await _0x297aaa.error(_0x4bf40a + "\n\ncommand : listmessage", _0x4bf40a, "*ERROR!*");
   }
-);
-smd(
-  {
-    pattern: "image",
-    alias: ["img", "pic"],
-    category: "search",
-    desc: "Searches Image on Google",
-    use: "<text>",
-    filename: __filename,
-  },
-  async (message, match) => {
-    try {
-      let text = match ? match : message.reply_text;
-      if (!text)
-        return message.reply(`Provide me a query!\n*Ex : .image luffy |10*`);
-
-      let name1 = text.split("|")[0] || text;
-      let name2 = text.split("|")[1] || `5`;
-
-      let nn = parseInt(name2) || 5;
-      let Group = await groupdb.findOne({ id: message.chat });
-      let safe = Group.nsfw == "true" ? "off" : "on";
-      try {
-        let n = await gis(name1, {
-          query: { safe: safe },
-          userAgent:
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36",
-        });
-        console.log("images results : ", n);
-
-        if (n && n[0]) {
-          nn = n && n.length > nn ? nn : n.length;
-          message.reply(`*_Sending images of '${name1}' in chat!_*`);
-          for (let i = 0; i < nn; i++) {
-            try {
-              let random = Math.floor(Math.random() * n.length);
-              message.bot.sendFromUrl(
-                message.jid,
-                n[random].url,
-                "",
-                message,
-                {},
-                "image"
-              );
-              n.splice(random, 1);
-            } catch {}
-          }
-          return;
-        }
-      } catch (e) {
-        console.log("ERROR IN SYNC G>I>S IMAGE PACKAGE\n\t", e);
-      }
-
-      let buttonMessage = {};
-
-      let urlsArray = [];
-      const params = {
-        q: name1,
-        tbm: "isch",
-        hl: "en",
-        gl: "in",
-        ijn: "0",
-      };
-      const headers = {
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.5060.114 Safari/537.36",
-        "Accept-Encoding": "application/json",
-      };
-
-      const res = await axios.get("https://www.google.com/search", {
-        headers: headers,
-        params: params,
-      });
-      let body = res.data;
-      body = body.slice(body.lastIndexOf("AF_initDataCallback"));
-      body = body.slice(body.indexOf("["));
-      body = body.slice(0, body.indexOf("</script>") - 1);
-      body = body.slice(0, body.lastIndexOf(","));
-
-      const img = JSON.parse(body);
-
-      const imgObjects = img[56][1][0][0][1][0];
-
-      for (let i = 0; i < name2; i++) {
-        if (imgObjects[i] && imgObjects[i][0][0]["444383007"][1]) {
-          let url = imgObjects[i][0][0]["444383007"][1][3][0]; // the url
-          urlsArray.push(url);
-        }
-      }
-
-      for (let url of urlsArray) {
-        try {
-          message.bot.sendFromUrl(message.chat, url, "", message, {}, "image");
-        } catch {}
-      }
-    } catch (e) {
-      return await message.error(
-        `${e}\n\n command: image`,
-        e,
-        `*_Uhh dear, Didn't get any results!_*`
-      );
+});
+smd({
+  cmdname: "caption",
+  alias: ["setcaption"],
+  desc: "set caption for Replied Message",
+  category: "misc",
+  filename: __filename
+}, async (_0xcc3d0b, _0x718ae9) => {
+  try {
+    if (!_0xcc3d0b.reply_message || !_0x718ae9) {
+      return await _0xcc3d0b.reply(!_0xcc3d0b.reply_message ? "*_Please reply to message with caption | filname_*" : "*Please provide text to set caption!*");
     }
-  }
-);
-smd(
-  {
-    pattern: "couplepp",
-    category: "search",
-    desc: "Sends two couples pics.",
-    filename: __filename,
-  },
-  async (message) => {
-    try {
-      let anu = await fetchJson(
-        "https://raw.githubusercontent.com/iamriz7/kopel_/main/kopel.json"
-      );
-      let random = anu[Math.floor(Math.random() * anu.length)];
-      message.reply(
-        random.male,
-        { caption: `*✦Couple Male profile✦*` },
-        "image"
-      );
-      message.reply(
-        random.female,
-        { caption: `*✦Couple Female profile✦*` },
-        "image"
-      );
-    } catch (e) {
-      return await message.error(
-        `${e}\n\n command: couplepp`,
-        e,
-        `*_Uhh dear, Didn't get any results!_*`
-      );
-    }
-  }
-);
-//---------------------------------------------------------------------------
-smd(
-  {
-    pattern: "iswa",
-    alias: ["oldwa", "bio", "onwa"],
-    category: "search",
-    desc: "Searches in given rage about given number.",
-    use: "263778533166xx",
-    filename: __filename,
-  },
-  async (message, text) => {
-    if (!text)
-      return await message.reply(
-        "Give Me Number without + sign. Example: .iswa 234906652xx"
-      );
-    var inputnumber = text.split(" ")[0];
-    if (!inputnumber.includes("x"))
-      return message.reply(
-        `*You did not add x*\nExample: iswa 234906652xx  \n ${Config.caption}`
-      );
-    message.reply(
-      `*Searching for WhatsApp account in given range...* \n ${Config.caption}`
-    );
-
-    function countInstances(string, word) {
-      return string.split(word).length - 1;
-    }
-    var number0 = inputnumber.split("x")[0];
-    var number1 = inputnumber.split("x")[countInstances(inputnumber, "x")]
-      ? inputnumber.split("x")[countInstances(inputnumber, "x")]
-      : "";
-    var random_length = countInstances(inputnumber, "x");
-    var randomxx;
-    if (random_length == 1) {
-      randomxx = 10;
-    } else if (random_length == 2) {
-      randomxx = 100;
-    } else if (random_length == 3) {
-      randomxx = 1000;
-    }
-
-    text = `*--『 List of Whatsapp Numbers 』--*\n\n`;
-    var nobio = `\n*Bio:* || \nHey there! I am using WhatsApp.\n`;
-    var nowhatsapp = `\n*Numbers with no WhatsApp account within provided range.*\n`;
-    for (let i = 0; i < randomxx; i++) {
-      var nu = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
-      var status1 = nu[Math.floor(Math.random() * nu.length)];
-      var status2 = nu[Math.floor(Math.random() * nu.length)];
-      var status3 = nu[Math.floor(Math.random() * nu.length)];
-      var dom4 = nu[Math.floor(Math.random() * nu.length)];
-      var random;
-      if (random_length == 1) {
-        random = `${status1}`;
-      } else if (random_length == 2) {
-        random = `${status1}${status2}`;
-      } else if (random_length == 3) {
-        random = `${status1}${status2}${status3}`;
-      } else if (random_length == 4) {
-        random = `${status1}${status2}${status3}${dom4}`;
-      }
-
-      var anu = await message.bot.onWhatsApp(
-        `${number0}${i}${number1}@s.whatsapp.net`
-      );
-      var anuu = anu.length !== 0 ? anu : false;
-      try {
-        try {
-          var anu1 = await message.bot.fetchStatus(anu[0].jid);
-        } catch {
-          var anu1 = "401";
-        }
-        if (anu1 == "401" || anu1.status.length == 0) {
-          nobio += `wa.me/${anu[0].jid.split("@")[0]}\n`;
-        } else {
-          text += `🧐 *Number:* wa.me/${anu[0].jid.split("@")[0]}\n ✨*Bio :* ${
-            anu1.status
-          }\n🍁*Last update :* ${moment(anu1.setAt)
-            .tz("Asia/Karachi")
-            .format("HH:mm:ss DD/MM/YYYY")}\n\n`;
-        }
-      } catch {
-        nowhatsapp += ` ≛ ${number0}${i}${number1}\n`;
-      }
-    }
-    return await message.reply(`${text}${nobio}${nowhatsapp}`);
-  }
-);
-smd(
-  {
-    pattern: "nowa",
-    category: "search",
-    desc: "Searches in given rage about given number.",
-    use: "234906652xx",
-    filename: __filename,
-  },
-  async (message, text) => {
-    if (!text)
-      return await message.reply(
-        "Give Me Number without + sign. Example: .nowa 234906652xx"
-      );
-    const inputNumber = text.split(" ")[0];
-    if (!inputNumber.includes("x"))
-      return message.reply(
-        `*You did not add x in number.*\nExample: ${prefix}nowa 2348039xx  \n ${Config.caption}`
-      );
-    message.reply(
-      `*Searching for WhatsApp account in the given range...*\n${Config.caption}`
-    );
-    function countInstances(string, word) {
-      return string.split(word).length - 1;
-    }
-    const number0 = inputNumber.split("x")[0];
-    const number1 = inputNumber.split("x").slice(-1)[0] || "";
-    const randomLength = countInstances(inputNumber, "x");
-    const randomxx = [10, 100, 1000][randomLength - 1] || 0;
-    let nobio = `\n*『 WhatsApp Account With No Bio』* \n`;
-    let nobios = "";
-    let nowhatsapp = `*『 Numbers With No WhatsApp Account 』* \n\n`;
-    for (let i = 0; i < randomxx; i++) {
-      const nu = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
-      const status = nu
-        .slice(0, randomLength)
-        .map(() => nu[Math.floor(Math.random() * nu.length)])
-        .join("");
-      const random = `${status}${
-        nu[Math.floor(Math.random() * nu.length)]
-      }`.slice(0, randomLength);
-      const anu = await message.bot.onWhatsApp(`${number0}${i}${number1}`);
-      const anuu = anu.length !== 0 ? anu : false;
-      try {
-        const anu1 = await message.bot.fetchStatus(anu[0].jid);
-        if (anu1 === "401" || anu1.status.length === 0) {
-          nobios += `wa.me/${anu[0].jid.split("@")[0]}\n`;
-        }
-      } catch {
-        nowhatsapp += ` ≛ ${number0}${i}${number1}\n`;
-      }
-    }
-    if (!nobios) {
-      nobio = "";
+    if (_0xcc3d0b.reply_message.image || _0xcc3d0b.reply_message.video || _0xcc3d0b.reply_message.mtype.includes("document")) {
+      let _0x4e09a5 = "" + _0x718ae9.split("|")[1]?.trim() || "null";
+      let _0x14b6a8 = _0xcc3d0b.reply_message.mtype.includes("document") ? _0x718ae9.split("|")[0].trim() : _0x718ae9;
+      _0xcc3d0b.reply_message.message[_0xcc3d0b.reply_message.mtype].caption = _0x14b6a8;
+      _0xcc3d0b.reply_message.message[_0xcc3d0b.reply_message.mtype].fileName = _0x4e09a5;
+      await _0xcc3d0b.bot.copyNForward(_0xcc3d0b.chat, _0xcc3d0b.reply_message);
     } else {
-      nobio += nobios + "\n\n";
+      return await _0xcc3d0b.reply("please reply to an Audio/Video/document message");
     }
-    return await message.reply(`${nobio}${nowhatsapp}${Config.caption}`);
+  } catch (_0x5ab188) {
+    await _0xcc3d0b.error(_0x5ab188 + "\n\ncommand : caption", _0x5ab188, false);
   }
-);
+});
+smd({
+  cmdname: "document",
+  alias: ["senddoc", "todoc"],
+  desc: "send document for Replied image/video Message",
+  category: "misc",
+  filename: __filename
+}, async (_0x7587f6, _0x11eeb1) => {
+  try {
+    let _0x49db20 = _0x7587f6.image || _0x7587f6.video ? _0x7587f6 : _0x7587f6.reply_message && (_0x7587f6.reply_message.image || _0x7587f6.reply_message.video) ? _0x7587f6.reply_message : false;
+    if (!_0x49db20) {
+      return await _0x7587f6.reply("_Reply to an image/video message!_");
+    }
+    if (!_0x11eeb1) {
+      return await _0x7587f6.reply("_Need fileName, Example: document themx | caption_");
+    }
+    let _0x1bfcf5 = await _0x7587f6.bot.downloadAndSaveMediaMessage(_0x49db20);
+    let _0x3f6d77 = _0x11eeb1.includes(":") ? ":" : _0x11eeb1.includes(";") ? ";" : "|";
+    let _0x3c4532 = _0x11eeb1.split(_0x3f6d77)[0].trim() + "." + (_0x49db20.image ? "jpg" : "mp4");
+    let _0x3367ca = _0x11eeb1.split(_0x3f6d77)[1]?.trim() || "";
+    _0x3367ca = ["copy", "default", "old", "reply"].includes(_0x3367ca) ? _0x49db20.text : _0x3367ca;
+    if (_0x1bfcf5) {
+      _0x7587f6.bot.sendMessage(_0x7587f6.chat, {
+        document: {
+          url: _0x1bfcf5
+        },
+        mimetype: _0x49db20.mimetype,
+        fileName: _0x3c4532,
+        caption: _0x3367ca
+      });
+    } else {
+      _0x7587f6.reply("*Request Denied!*");
+    }
+  } catch (_0x408490) {
+    await _0x7587f6.error(_0x408490 + "\n\ncommand : document", _0x408490, false);
+  }
+});
+smd({
+  cmdname: "tovv",
+  alias: ["toviewonce"],
+  desc: "send viewonce for Replied image/video Message",
+  category: "whatsapp",
+  filename: __filename
+}, async (_0x241c6f, _0x5ce27a) => {
+  try {
+    let _0x1d26ad = _0x241c6f.image || _0x241c6f.video ? _0x241c6f : _0x241c6f.reply_message && (_0x241c6f.reply_message.image || _0x241c6f.reply_message.video) ? _0x241c6f.reply_message : false;
+    if (!_0x1d26ad) {
+      return await _0x241c6f.reply("_Reply to image/video with caption!_");
+    }
+    let _0x60cca4 = await _0x241c6f.bot.downloadAndSaveMediaMessage(_0x1d26ad);
+    let _0x8cde12 = _0x1d26ad.image ? "image" : "video";
+    if (_0x60cca4) {
+      _0x241c6f.bot.sendMessage(_0x241c6f.chat, {
+        [_0x8cde12]: {
+          url: _0x60cca4
+        },
+        caption: _0x5ce27a,
+        mimetype: _0x1d26ad.mimetype,
+        fileLength: "99999999",
+        viewOnce: true
+      }, {
+        quoted: _0x1d26ad
+      });
+    } else {
+      _0x241c6f.reply("*Request Denied!*");
+    }
+  } catch (_0x2422e7) {
+    await _0x241c6f.error(_0x2422e7 + "\n\ncommand : tovv", _0x2422e7, false);
+  }
+});
+smd({
+  cmdname: "feature",
+  alias: ["totalfeature", "features", "themx"],
+  category: "tools",
+  filename: __filename,
+  info: "get counting for total features!"
+}, async _0x4e7c63 => {
+  try {
+    const _0x4de967 = require("../lib/plugins");
+    let _0x4cf8ed = Object.values(_0x4de967.commands).length;
+    try {
+      let {
+        key: _0x2d7cf6
+      } = await _0x4e7c63.send("Counting... 0", {}, "themx", _0x4e7c63);
+      for (let _0x16a10f = 0; _0x16a10f <= _0x4cf8ed; _0x16a10f++) {
+        if (_0x16a10f % 15 === 0) {
+          await _0x4e7c63.send("Counting... " + _0x16a10f, {
+            edit: _0x2d7cf6
+          }, "themx", _0x4e7c63);
+        } else if (_0x4cf8ed - _0x16a10f < 10) {
+          await _0x4e7c63.send("Counting... " + _0x16a10f, {
+            edit: _0x2d7cf6
+          }, "themx", _0x4e7c63);
+        }
+      }
+      await _0x4e7c63.send("*Feature Counting Done!*", {
+        edit: _0x2d7cf6
+      }, "themx", _0x4e7c63);
+    } catch (_0x28ce7e) {}
+    let _0x50f17a = " *乂 MX-1.0 - ＢＯＴ ＦＥＡＴＵＲＥ*\n\n\n  ◦ _Total Features ➪ " + _0x4cf8ed + "_\n  \n*◦ BOT FEATURES*\n\n      Plugins ➪ " + Object.values(_0x4de967.commands).filter(_0x54d4bf => _0x54d4bf.pattern).length + "_\n      _Msg Listener ➪ " + Object.values(_0x4de967.commands).filter(_0x2376a3 => _0x2376a3.on).length + "_\n      _Call Listener ➪ " + Object.values(_0x4de967.commands).filter(_0x54a19b => _0x54a19b.call).length + "_\n      _Group Listener ➪ " + Object.values(_0x4de967.commands).filter(_0x35381c => _0x35381c.group).length + "_\n  \n\n" + Config.caption;
+    await _0x4e7c63.bot.relayMessage(_0x4e7c63.chat, {
+      requestPaymentMessage: {
+        currencyCodeIso4217: "PK",
+        amount1000: _0x4cf8ed * 1000,
+        requestFrom: "2349021506036@s.whatsapp.net",
+        noteMessage: {
+          extendedTextMessage: {
+            text: _0x50f17a,
+            contextInfo: {
+              mentionedJid: [_0x4e7c63.sender],
+              externalAdReply: {
+                showAdAttribution: true
+              }
+            }
+          }
+        }
+      }
+    }, {});
+  } catch (_0x979e23) {
+    await _0x4e7c63.error(_0x979e23 + "\n\ncommand : feature", _0x979e23, false);
+  }
+});
+smd({
+  cmdname: "character",
+  category: "pastime",
+  use: "[@user]",
+  filename: __filename,
+  info: "Check character of replied USER!"
+}, async _0x2a677e => {
+  const _0x32c078 = _0x2a677e.reply_message ? _0x2a677e.reply_message.sender : _0x2a677e.mentionedJid && _0x2a677e.mentionedJid[0] ? _0x2a677e.mentionedJid[0] : "";
+  if (!_0x32c078 || !_0x32c078.includes("@")) {
+    return await _0x2a677e.reply("*Mention/reply user to check its character!*");
+  }
+  const _0x5845d4 = ["Sigma", "Generous", "Grumpy", "Overconfident", "Obedient", "Good", "Simple", "Kind", "Patient", "Pervert", "Cool", "Helpful", "Brilliant", "Sexy", "Hot", "Gorgeous", "Cute", "Fabolous", "Funny"];
+  const _0x2f5d93 = _0x5845d4[Math.floor(Math.random() * _0x5845d4.length)];
+  let _0x3b31ed = "Character of @" + _0x32c078.split("@")[0] + "  is *" + _0x2f5d93 + "* 🔥⚡";
+  _0x2a677e.send(_0x3b31ed, {
+    mentions: [_0x32c078]
+  }, "themx", _0x2a677e);
+});
+smd({
+  cmdname: "poetry",
+  alias: ["shairi", "shayeri"],
+  type: "pastime",
+  info: "get randome poetry lines"
+}, async _0x4d032f => {
+  try {
+    let _0x45fa91 = await fetch("https://shizoapi.onrender.com/api/texts/shayari?apikey=shizo");
+    let {
+      result: _0x1aa994
+    } = await _0x45fa91.json();
+    _0x4d032f.reply(_0x45fa91 && _0x1aa994 ? _0x1aa994 : "_Request Denied from Server!_");
+  } catch (_0x303ba6) {
+    await _0x4d032f.error(_0x303ba6 + "\n\ncommand : poetry", _0x303ba6, false);
+  }
+});
+smd({
+  cmdname: "alexa",
+  category: "ai",
+  use: "[text]",
+  filename: __filename,
+  info: "chat with simsimi alexa ai!"
+}, async (_0xe6d6e, _0x23f786) => {
+  try {
+    if (!_0x23f786) {
+      return await _0xe6d6e.reply("Hi *" + _0xe6d6e.senderName + "*, do you want to talk?");
+    }
+    const _0x55bb61 = {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded"
+      },
+      body: "text=" + encodeURIComponent(_0x23f786) + "&lc=en&key="
+    };
+    const _0x5099c8 = await fetch("https://api.simsimi.vn/v2/simtalk", _0x55bb61);
+    const _0x2c3e12 = await _0x5099c8.json();
+    if (_0x2c3e12.status === "200" && _0x2c3e12.message) {
+      _0xe6d6e.reply(_0x2c3e12.message);
+    } else {
+      _0xe6d6e.reply("*No Responce!*");
+    }
+  } catch (_0xfee6e3) {
+    await _0xe6d6e.error(_0xfee6e3 + "\n\ncommand : poetry", _0xfee6e3, false);
+  }
+});
+smd({
+  cmdname: "mxping",
+  alias: ["botstatus", "statusbot", "p2"],
+  type: "tools",
+  info: "get randome poetry lines"
+}, async _0xdfc3ca => {
+  try {
+    const _0x37ca41 = process.memoryUsage();
+    const _0x4a72de = os.cpus().map(_0x39cb6a => {
+      _0x39cb6a.total = Object.keys(_0x39cb6a.times).reduce((_0x432663, _0x5a155c) => _0x432663 + _0x39cb6a.times[_0x5a155c], 0);
+      return _0x39cb6a;
+    });
+    const _0x410388 = _0x4a72de.reduce((_0x8a6a46, _0x3dde47, _0x4edc26, {
+      length: _0x378aa4
+    }) => {
+      _0x8a6a46.total += _0x3dde47.total;
+      _0x8a6a46.speed += _0x3dde47.speed / _0x378aa4;
+      _0x8a6a46.times.user += _0x3dde47.times.user;
+      _0x8a6a46.times.nice += _0x3dde47.times.nice;
+      _0x8a6a46.times.sys += _0x3dde47.times.sys;
+      _0x8a6a46.times.idle += _0x3dde47.times.idle;
+      _0x8a6a46.times.irq += _0x3dde47.times.irq;
+      return _0x8a6a46;
+    }, {
+      speed: 0,
+      total: 0,
+      times: {
+        user: 0,
+        nice: 0,
+        sys: 0,
+        idle: 0,
+        irq: 0
+      }
+    });
+    let _0xce26d = speed();
+    let _0x3db049 = speed() - _0xce26d;
+    neww = performance.now();
+    oldd = performance.now();
+    respon = ("\nResponse Speed " + _0x3db049.toFixed(4) + " _Second_ \n " + (oldd - neww) + " _miliseconds_\n\nRuntime : " + runtime(process.uptime()) + "\n\n💻 Info Server\nRAM: " + formatp(os.totalmem() - os.freemem()) + " / " + formatp(os.totalmem()) + "\n\n_NodeJS Memory Usaage_\n" + Object.keys(_0x37ca41).map((_0x19d575, _0x3942d9, _0x3fa08c) => _0x19d575.padEnd(Math.max(..._0x3fa08c.map(_0x6548cb => _0x6548cb.length)), " ") + ": " + formatp(_0x37ca41[_0x19d575])).join("\n") + "\n\n" + (_0x4a72de[0] ? "_Total CPU Usage_\n" + _0x4a72de[0].model.trim() + " (" + _0x410388.speed + " MHZ)\n" + Object.keys(_0x410388.times).map(_0xffc60c => "- *" + (_0xffc60c + "*").padEnd(6) + ": " + (_0x410388.times[_0xffc60c] * 100 / _0x410388.total).toFixed(2) + "%").join("\n") + " " : "") + "\n\n ").trim();
+    _0xdfc3ca.reply(respon);
+  } catch (_0x13d03e) {
+    await _0xdfc3ca.error(_0x13d03e + "\n\ncommand : mxping", _0x13d03e, false);
+  }
+});
+smd({
+  cmdname: "myip",
+  alias: ["ip"],
+  type: "misc",
+  info: "get randome poetry lines"
+}, async _0x446c27 => {
+  try {
+    let {
+      data: _0x58d504
+    } = await axios.get("https://api.ipify.org/");
+    _0x446c27.send(_0x58d504 ? "*Bot's IP address is : _" + _0x58d504 + "_*" : "_No responce from server!_");
+  } catch (_0x2976b7) {
+    await _0x446c27.error(_0x2976b7 + "\n\ncommand : myip", _0x2976b7, false);
+  }
+});
+let ssweb = (_0x55d18b, _0x2b24ca = "desktop") => {
+  return new Promise((_0x3e38ef, _0x5b6da8) => {
+    const _0x3eb2a3 = "https://www.screenshotmachine.com";
+    const _0x3bbdf7 = {
+      url: _0x55d18b,
+      device: _0x2b24ca,
+      cacheLimit: 0
+    };
+    axios({
+      url: _0x3eb2a3 + "/capture.php",
+      method: "POST",
+      data: new URLSearchParams(Object.entries(_0x3bbdf7)),
+      headers: {
+        "content-type": "application/x-www-form-urlencoded; charset=UTF-8"
+      }
+    }).then(_0xc3c6b3 => {
+      const _0x5ba45c = _0xc3c6b3.headers["set-cookie"];
+      if (_0xc3c6b3.data.status == "success") {
+        axios.get(_0x3eb2a3 + "/" + _0xc3c6b3.data.link, {
+          headers: {
+            cookie: _0x5ba45c.join("")
+          },
+          responseType: "arraybuffer"
+        }).then(({
+          data: _0x257890
+        }) => {
+          result = {
+            status: 200,
+            result: _0x257890
+          };
+          _0x3e38ef(result);
+        });
+      } else {
+        _0x5b6da8({
+          status: 404,
+          statuses: "Link Error",
+          message: _0xc3c6b3.data
+        });
+      }
+    }).catch(_0x5b6da8);
+  });
+};
+smd({
+  cmdname: "ss",
+  alias: ["webss", "fullss"],
+  type: "misc",
+  info: "get randome poetry lines"
+}, async (_0x4cdec8, _0x41dfb5) => {
+  try {
+    let _0x587b99 = _0x41dfb5.split(" ")[0].trim();
+    if (!_0x587b99) {
+      return await _0x4cdec8.reply("*Need URL! Use " + prefix + "ss https://github.com/themxgamecoder/MX-1.0*");
+    }
+    let _0x358290 = await ssweb(_0x587b99);
+    if (_0x358290 && _0x358290.status == "200") {
+      return await _0x4cdec8.send(_0x358290.result, {
+        caption: Config.caption
+      }, "smdimg", _0x4cdec8);
+    } else {
+      _0x4cdec8.send("_No responce from server!_");
+    }
+  } catch (_0x126b07) {
+    await _0x4cdec8.error(_0x126b07 + "\n\ncommand : myip", _0x126b07, "*Request Denied!*");
+  }
+});
+let tmpUrl = "https://telegra.ph/file/b8e96b599e0fa54d25940.jpg";
+const secmailData = {};
+smd({
+  pattern: "tempmail",
+  alias: ["tmpmail", "newmail", "tempemail"],
+  info: "Create tempory email address, and use it according your need!",
+  type: "tools"
+}, async _0x10eae6 => {
+  try {
+    if (!secmailData[_0x10eae6.sender]) {
+      const _0x5b6408 = await tempmail.create();
+      if (!_0x5b6408 || !_0x5b6408[0]) {
+        return await _0x10eae6.reply("*Request Denied!*");
+      }
+      const _0x17929d = _0x5b6408[0].split("@");
+      secmailData[_0x10eae6.sender] = {
+        email: _0x5b6408[0],
+        login: _0x17929d[0],
+        domain: _0x17929d[1]
+      };
+    }
+    var _0x54710d = false;
+    try {
+      _0x54710d = await smdBuffer(tmpUrl);
+    } catch (_0x40985f) {}
+    await _0x10eae6.reply(("*YOUR TEMPMAIL INFO*\n      \n      \n  *EMAIL:* ➪ " + secmailData[_0x10eae6.sender].email + "\n  *Login:* ➪ " + secmailData[_0x10eae6.sender].login + "\n  *Domain:* ➪ " + secmailData[_0x10eae6.sender].domain + "\n  \n  \n  *USE _" + prefix + "checkmail_ to get latest emails!*\n  *USE _" + prefix + "delmail_ to delete current email!*\n  \n  " + Config.caption + "\n  ").trim(), {
+      contextInfo: {
+        ...(await _0x10eae6.bot.contextInfo("TEMPMAIL", _0x10eae6.senderName, _0x54710d))
+      }
+    }, "smd", _0x10eae6);
+  } catch (_0x2c8958) {
+    console.log(_0x2c8958);
+    await _0x10eae6.reply("*Request Denied!*");
+  }
+});
+smd({
+  pattern: "checkmail",
+  alias: ["readmail", "reademail"],
+  type: "tools",
+  info: "check mails in your temporary email address!"
+}, async _0x39080b => {
+  try {
+    const _0x13bdf9 = _0x39080b.sender;
+    const _0x1ca6eb = secmailData[_0x13bdf9];
+    if (!_0x1ca6eb || !_0x1ca6eb.email) {
+      return await _0x39080b.reply("*You haven't created a temporary email.*\n  *Use _" + prefix + "tempmail_ to create email first!*");
+    }
+    const _0xb59e7d = await tempmail.mails(_0x1ca6eb.login, _0x1ca6eb.domain);
+    if (!_0xb59e7d || !_0xb59e7d[0] || _0xb59e7d.length === 0) {
+      return await _0x39080b.reply("*EMPTY  ➪ No mails received yet!* \n*Use _" + prefix + "delmail_ to delete mail!*");
+    }
+    var _0x392c45 = false;
+    try {
+      _0x392c45 = await smdBuffer(tmpUrl);
+    } catch (_0x27f4a4) {}
+    for (const _0x2b6dd0 of _0xb59e7d) {
+      const _0x587f7f = await tempmail.emailContent(_0x1ca6eb.login, _0x1ca6eb.domain, _0x2b6dd0.id);
+      console.log({
+        emailContent: _0x587f7f
+      });
+      if (_0x587f7f) {
+        const _0xa4d211 = "\n  *From* ➪ " + _0x2b6dd0.from + "\n  *Date* ➪  " + _0x2b6dd0.date + "\n  *EMAIL ID* ➪  [" + _0x2b6dd0.id + "]\n  *Subject* ➪  " + _0x2b6dd0.subject + "\n  *Content* ➪  " + _0x587f7f;
+        await _0x39080b.reply(_0xa4d211, {
+          contextInfo: {
+            ...(await _0x39080b.bot.contextInfo("*EMAIL ➪ " + _0x2b6dd0.id + "*", _0x39080b.senderName, _0x392c45))
+          }
+        }, "smd", _0x39080b);
+        ;
+      }
+    }
+  } catch (_0x4473c8) {
+    console.log(_0x4473c8);
+    await _0x39080b.reply("*Request Denied!*");
+  }
+});
+smd({
+  pattern: "delmail",
+  alias: ["deletemail", "deltemp", "deltmp"],
+  type: "tools",
+  info: "Delete tempory email address!"
+}, async _0x536927 => {
+  try {
+    const _0x35c5db = _0x536927.sender;
+    if (secmailData[_0x35c5db]) {
+      delete secmailData[_0x35c5db];
+      await _0x536927.reply("*Successfully deleted the email address.*");
+    } else {
+      await _0x536927.reply("*No email address to delete.*");
+    }
+  } catch (_0x527b01) {
+    console.log(_0x527b01);
+    await _0x536927.reply("*Request Denied!*");
+  }
+});
+const tempmail = {};
+tempmail.create = async () => {
+  const _0x4b8b0a = "https://www.1secmail.com/api/v1/?action=genRandomMailbox&count=1";
+  try {
+    let _0x64d3a = await fetch(_0x4b8b0a);
+    if (!_0x64d3a.ok) {
+      throw new Error("HTTP error! status: " + _0x64d3a.status);
+    }
+    let _0x3d6ee6 = await _0x64d3a.json();
+    return _0x3d6ee6;
+  } catch (_0x5fcd34) {
+    console.log(_0x5fcd34);
+    return null;
+  }
+};
+tempmail.mails = async (_0xf78957, _0x22b96c) => {
+  const _0x52bcfa = "https://www.1secmail.com/api/v1/?action=getMessages&login=" + _0xf78957 + "&domain=" + _0x22b96c;
+  try {
+    let _0x334113 = await fetch(_0x52bcfa);
+    if (!_0x334113.ok) {
+      throw new Error("HTTP error! status: " + _0x334113.status);
+    }
+    let _0x21e568 = await _0x334113.json();
+    return _0x21e568;
+  } catch (_0x470fd0) {
+    console.log(_0x470fd0);
+    return null;
+  }
+};
+tempmail.emailContent = async (_0x2bb874, _0x365dd7, _0x53af41) => {
+  const _0x525052 = "https://www.1secmail.com/api/v1/?action=readMessage&login=" + _0x2bb874 + "&domain=" + _0x365dd7 + "&id=" + _0x53af41;
+  try {
+    let _0x5287ec = await fetch(_0x525052);
+    if (!_0x5287ec.ok) {
+      throw new Error("HTTP error! status: " + _0x5287ec.status);
+    }
+    let _0x321f50 = await _0x5287ec.json();
+    const _0x2d0a5f = _0x321f50.htmlBody;
+    console.log({
+      htmlContent: _0x2d0a5f
+    });
+    const _0x59fd31 = cheerio.load(_0x2d0a5f);
+    const _0x492dcb = _0x59fd31.text();
+    return _0x492dcb;
+  } catch (_0x47924e) {
+    console.log(_0x47924e);
+    return null;
+  }
+};

@@ -1,161 +1,151 @@
-let baseApi =
-  process.env.API_SMD || global.api_smd || "https://api-smd-1.vercel.app";
-
 const {
-  smd,
-  prefix,
-  Config,
-  createUrl,
-  photoEditor,
-  smdBuffer,
-} = require("../lib");
-let photo = ["imageMessage"];
+     note, 
+     smd,
+     prefix 
+    } = require('../lib')
 
-let gfxold = [
-  "ad",
-  "uncover",
-  "clown",
-  "mnm",
-  "pet",
-  "drip",
-  "gun",
-  "colorify",
-];
 
-let gfxx = [
-  "beautiful",
-  "blur",
-  "facepalm",
-  "invert",
-  "rainbow",
-  "wanted",
-  "wasted",
-  "greyscale",
-  "sepia",
-  "rip",
-  "trash",
-  "hitler",
-  "jail",
-  "shit",
-  "affect",
-  ...gfxold,
-];
+//---------------------------------------------------------------------------
+smd({
+           cmdname: "delnote",
+           type: "notes",
+           filename: __filename,
+ fromMe:true,
+           info: "Deletes note from db.",
+           use: '< note id | 1 >',
+       },
+       async(message, match) => {
+           try{
+               let id = match.split(' ')[0];
+               if (!id || isNaN(id)) { return message.reply(`*Provide Note ID, Example: ${prefix}delnote 1*`); }
+               let res = await note.delnote(message,id)
+               return await message.reply(res.msg);
+           }catch(e){ await message.error(`${e}\n\ncommand: delnote`,e,) }
+       }
+   )
+//---------------------------------------------------------------------------
 
-const sendEditor = async (
-  m,
-  cmd,
-  error = true,
-  cap = Config.caption?.split("\n")[0] || ""
-) => {
-  if (!gfxx.includes(cmd)) return;
-  try {
-    let mm = m.image
-      ? m
-      : m.reply_message && m.reply_message.image
-      ? m.reply_message
-      : false;
-    if (!mm || !photo.includes(mm.mtype2))
-      return m.reply(`*_Uhh Dear,  Reply To An Image!_*`);
-    let media = await m.bot.downloadAndSaveMediaMessage(mm);
-    var anu = "";
-    try {
-      anu = (await createUrl(media, "uguMashi")).url;
-      if (!anu) throw new Error("invalid Media!");
-    } catch (e) {
-      console.log(e);
-      try {
-        anu = await createUrl(media);
-      } catch (e) {
-        anu = false;
-      }
-    }
-    try {
-      fs.unlink(media);
-    } catch (e) {}
-    if (!anu) return m.reply("*_Failed To Create Url!_*");
-    let base = await smdBuffer(`${baseApi}/api/maker/${cmd}?url=${anu}`);
-
-    m.send(base, { caption: cap }, "img", mm);
-  } catch (e) {
-    if (error) {
-      console.log(e);
-      await m.error(`${e}\n\ncommand ${cmd}`, e, false);
-    }
-  }
-};
-
-for (let i = 0; i < gfxx.length; i++) {
-  smd(
-    {
-      cmdname: gfxx[i],
-      infocmd: `Edit image with ${gfxx[i]} effect!`,
-      type: "editor",
-      use: "< image >",
-      filename: __filename,
-    },
-    async (m, text, { smd }) => {
-      try {
-        if (gfxold.includes(smd)) {
-          await photoEditor(m, smd);
-        } else {
-          sendEditor(m, smd);
-        }
-      } catch (err) {
-        await message.error(
-          `${err}\n\ncommand: ${smd}`,
-          err,
-          "Request Denied!"
-        );
-      }
-    }
-  );
+smd({
+   cmdname: "delallnote",
+   type: "notes",
+ fromMe:true,
+   filename: __filename,
+   info: "Deletes all notes from db."
+},
+async(message) => {
+   try{
+     let res = await note.delallnote(message)
+     return await message.reply(res.msg);
+   }catch(e){ await message.error(`${e}\n\ncommand: delallnotes`,e,) }
 }
+)
+//---------------------------------------------------------------------------
+smd({
+   cmdname: "allnote",
+   type: "notes",
+   filename: __filename,
+ fromMe:true,
+   info: "Shows list of all notes."
+},
+async(message,) => {
+   try{
+     let res = await note.allnotes(message,"all")
+     return await message.reply(res.msg);
+}catch(e){ await message.error(`${e}\n\ncommand: delallnotes`,e,`*Can't fetch data, Sorry!!*`) }
+}
+)
+//---------------------------------------------------------------------------
+smd({
+ cmdname: "getnote",
+ type: "notes",
+ filename: __filename,
+fromMe:true,
+ info: "Shows note by id.",
+ use: '< id|1|2 >',
+},
+async(message,match) => {
+ try{
+   if(!match)return await  message.reply(`*Provide Note ID, Ex: ${prefix}getnote id|1|2|..*`); 
+   let res = await note.allnotes(message,match.split(" ")[0].toLowerCase().trim())
+   return await message.reply(res.msg);
+}catch(e){ await message.error(`${e}\n\ncommand: getnote`,e,`*Can't fetch data, Sorry!!*`) }
+}
+)
 
-smd(
-  {
-    cmdname: "editor",
-    infocmd: "create gfx logo for text",
-    type: "editor",
-    use: "< image >",
-    filename: __filename,
-  },
-  async (m, text, { smd }) => {
-    try {
-      let mm = m.image
-        ? m
-        : m.reply_message && m.reply_message.image
-        ? m.reply_message
-        : false;
+//---------------------------------------------------------------------------
 
-      let too = `*Separate the text with _:_ sign!*\n*Example : ${
-        prefix + smd
-      } David _:_ Bot*`;
-      if (!mm) {
-        let str = `┌───〈 *MX-1.0*  〉───◆
-│╭─────────────···▸
-┴│▸
-⬡│▸ ${gfxx.join(" \n⬡│▸ ")}
-┬│▸
-│╰────────────···▸▸
-└───────────────···▸
+smd({
+           cmdname: "addnote",
+           type: "notes",
+           info: "Adds a note on db.",
+ fromMe:true,
+           filename: __filename,
+           use: '< text >',
+       },
+       async( message, match,) => {
+       try{                
+           if (!match) return await message.reply(`*Please provide text to save in notes!*`)
+           let res = await note.addnote(message,match)
+           return await message.reply(res.msg);
+       }catch(e){ await message.error(`${e}\n\ncommand: addnote`,e,) }
+       }
+   )
+//---------------------------------------------------------------------------
+//                  ADD NOTE  COMMANDS
+//---------------------------------------------------------------------------
 
-\t *USE: _${prefix + smd}_ by replying image*
-_To get All Results with single Cmd!_
-`;
-        return await m.sendUi(m.chat, { caption: str });
-      }
+smd({
+   cmdname: "note",
+   type: "notes",
+ fromMe:true,
+   filename: __filename,
+   info: "Shows list of all notes."
+},
+async(message, text,{smd}) => {
+   try{                
+let txt = `╭───── *『 MONGODB NOTES 』* ───◆
+┃ Here You Can Store Notes For Later Use
+┃ *------------------------------------------*
+┃  ┌┤  *✯---- ADD NEW NOTE ----⦿*
+┃  │✭ *Cmd :* ${prefix+smd} add 'Your Text'
+┃  │✭ *Usage :* Save Text in MongoDb Server
+┃  ╰───────────────────◆
+┃
+┃  ┌┤  *✯---- GET ALL NOTES ----⦿*
+┃  │✭ *Cmd :* ${prefix+smd} all
+┃  │✭ *Usage :* Read/Get All Saved Notes 
+┃  ╰───────────────────◆
+┃
+┃  ┌┤  *✯---- DELETE A NOTE ----⦿*
+┃  │✭ *Cmd :* ${prefix+smd} del 'note id'
+┃  │✭ *Usage :* Delete A Single Note By ID Number 
+┃  ╰───────────────────◆
+┃
+┃  ┌┤  *✯---- DELETE ALL NOTES ----⦿*
+┃  │✭ *Cmd :* ${prefix+smd} delall
+┃  │✭ *Usage :* Delete All Saved Notes 
+┃  ╰───────────────────◆
+╰━━━━━━━━━━━━━━━━━━━━━━──⊷` ; 
 
-      for (let i = 0; i < gfxx.length; i++) {
-        try {
-          if (gfxold.includes(gfxx[i])) {
-            await photoEditor(m, gfxx[i]);
-          } else {
-            sendEditor(m, gfxx[i], false);
-          }
-        } catch (e) {}
-      }
-    } catch (e) {
-      m.error(`${e}\n\nCommand: ${smd}`, e, false);
-    }
-  }
-);
+
+       if (!text) return await message.reply(txt);
+       let action = text.split(' ')[0].trim().toLowerCase()
+
+       if(action === "add"  || action === "new" ){
+         let res = await note.addnote(message,text.replace("add", "").replace("new", ""))
+         return await message.reply(res.msg);
+       }else if(action === "all"){
+         let res = await note.allnotes(message,"all")
+         return await message.reply(res.msg);
+       }else if(action === "delall"){
+         let res = await note.delallnote(message)
+         return await message.reply(res.msg);
+       }else if(action === "del"){
+         let id = text.split(' ')[1];
+         if (!id || isNaN(id)) { return message.reply("*Uhh Please, Provide Note ID. Example: .delnote 1*"); }
+         let res = await note.delnote(message,id)
+         return await message.reply(res.msg);
+       }else { return await message.reply(`*Invalid action provided, please follow* \n\n${txt}`) ; }
+
+   }catch(e){ await message.error(`${e}\n\ncommand: addnote`,e,`*Can't fetch data, Sorry!*`) }
+})
