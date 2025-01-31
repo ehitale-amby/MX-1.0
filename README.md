@@ -2,7 +2,7 @@
 
 ###### NEW VERSION IS NOW OUT OBB1 && JANUARY 4 2025
 
-#### NEXT UPDATE ON JANUARY 7 2025
+#### NEXT UPDATE ON JANUARY 10 2025
 <a><img src='https://i.imgur.com/LyHic3i.gif'/></a>
 [![Typing SVG](https://readme-typing-svg.demolab.com?font=Fira+Code&pause=1000&width=435&lines=MX-1.0+IS+AN+INTELLIGENT+ASSISTANT;MULTI-DEVICES+WHATSAPP+BOT;RELEASE+ON+JANUARY+4+2025;MX-+GΔMΞCØDΞR+Lead+and+Developer+🤔;Chatgpt+Assistant)](https://git.io/typing-svg)
 <a><img src='https://i.imgur.com/LyHic3i.gif'/></a>
